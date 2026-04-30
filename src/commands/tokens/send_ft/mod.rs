@@ -81,52 +81,9 @@ impl FtContract {
 }
 
 pub fn input_ft_contract_account_id(
-    credentials_home_dir: &std::path::Path,
+    _credentials_home_dir: &std::path::Path,
 ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-    let used_ft_contract_account_list =
-        crate::common::get_used_ft_contract_account_list(credentials_home_dir)
-            .into_iter()
-            .map(|ft_contract_account| {
-                format!(
-                    "{} ({})",
-                    ft_contract_account.ft_metadata.symbol,
-                    ft_contract_account.ft_contract_account_id
-                )
-            })
-            .collect::<Vec<_>>();
-    let account_id_str = match inquire::Text::new(
-        "Select from the list or enter a different ft-contract account ID:",
-    )
-    .with_autocomplete(move |val: &str| {
-        Ok(used_ft_contract_account_list
-            .iter()
-            .filter(|s| s.to_lowercase().contains(&val.to_lowercase()))
-            .cloned()
-            .collect())
-    })
-    .with_validator(|ft_contract_account_str: &str| {
-        let account_id_str =
-            &get_account_id_str_from_ft_contract_account_str(ft_contract_account_str);
-
-        match near_primitives::types::AccountId::validate(account_id_str) {
-            Ok(_) => Ok(inquire::validator::Validation::Valid),
-            Err(err) => Ok(inquire::validator::Validation::Invalid(
-                inquire::validator::ErrorMessage::Custom(format!("Invalid account ID: {err}")),
-            )),
-        }
-    })
-    .prompt()
-    {
-        Ok(value) => get_account_id_str_from_ft_contract_account_str(&value),
-        Err(
-            inquire::error::InquireError::OperationCanceled
-            | inquire::error::InquireError::OperationInterrupted,
-        ) => return Ok(None),
-        Err(err) => return Err(err.into()),
-    };
-    let account_id = crate::types::account_id::AccountId::from_str(&account_id_str)?;
-
-    Ok(Some(account_id))
+    Err(crate::common::non_interactive_input_required("ft-contract account ID").into())
 }
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
@@ -276,11 +233,3 @@ pub fn get_ft_balance_for_account(
     ))
 }
 
-fn get_account_id_str_from_ft_contract_account_str(ft_contract_account_str: &str) -> String {
-    ft_contract_account_str
-        .split_whitespace()
-        .last()
-        .unwrap_or_default()
-        .trim_matches(|c| c == '(' || c == ')')
-        .to_string()
-}

@@ -1,5 +1,3 @@
-use inquire::Text;
-use near_abi::AbiFunctionKind;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 mod as_read_only;
@@ -51,49 +49,11 @@ pub fn input_view_function_name(
 }
 
 fn input_function_name(
-    global_context: &crate::GlobalContext,
-    contract_account_id: &near_primitives::types::AccountId,
-    function_kind: near_abi::AbiFunctionKind,
+    _global_context: &crate::GlobalContext,
+    _contract_account_id: &near_primitives::types::AccountId,
+    _function_kind: near_abi::AbiFunctionKind,
     message: &str,
 ) -> color_eyre::eyre::Result<Option<String>> {
-    let mut function_names: Vec<String> = Vec::new();
-
-    let network_config = crate::common::find_network_where_account_exist(
-        global_context,
-        contract_account_id.clone(),
-    );
-
-    if let Ok(network) = network_config
-        && let Some(network_config) = network
-        && let Ok(contract_abi) =
-            tokio::runtime::Runtime::new()
-                .unwrap()
-                .block_on(super::get_contract_abi(
-                    &network_config.json_rpc_client(),
-                    &near_primitives::types::Finality::Final.into(),
-                    contract_account_id,
-                ))
-    {
-        function_names = contract_abi
-            .body
-            .functions
-            .into_iter()
-            .filter(|function| {
-                function.kind == AbiFunctionKind::View || function.kind == function_kind
-            })
-            .map(|function| function.name)
-            .collect();
-    }
-
-    Ok(Some(
-        Text::new(message)
-            .with_autocomplete(move |val: &str| {
-                Ok(function_names
-                    .iter()
-                    .filter(|s| s.contains(val))
-                    .cloned()
-                    .collect())
-            })
-            .prompt()?,
-    ))
+    let _ = message;
+    Err(crate::common::non_interactive_input_required("function name").into())
 }

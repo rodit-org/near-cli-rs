@@ -158,20 +158,14 @@ fn main() -> crate::common::CliResult {
                 std::iter::once(&near_cli_exec_path).chain(&cli_cmd.to_cli_args()),
             );
 
-            if !cli_cmd.quiet {
-                eprintln!(
-                    "\n\nHere is your console command if you need to script it or re-run:\n    {}\n",
-                    cli_cmd_str.yellow()
-                );
-            }
-
             crate::common::save_cli_command(&cli_cmd_str);
 
             Ok(Some(cli_cmd))
         }
         interactive_clap::ResultFromCli::Cancel(None) => {
-            eprintln!("\nGoodbye!");
-            Ok(None)
+            Err(color_eyre::eyre::eyre!(
+                "Command execution was cancelled. Provide all required options to run non-interactively."
+            ))
         }
         interactive_clap::ResultFromCli::Back => {
             unreachable!("TopLevelCommand does not have back option");
@@ -181,13 +175,6 @@ fn main() -> crate::common::CliResult {
                 let cli_cmd_str = shell_words::join(
                     std::iter::once(&near_cli_exec_path).chain(&cli_cmd.to_cli_args()),
                 );
-
-                if !cli_cmd.quiet {
-                    eprintln!(
-                        "\nHere is your console command if you need to script it or re-run:\n    {}\n",
-                        cli_cmd_str.yellow()
-                    );
-                }
 
                 crate::common::save_cli_command(&cli_cmd_str);
             }

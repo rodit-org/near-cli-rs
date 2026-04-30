@@ -1,8 +1,3 @@
-use color_eyre::owo_colors::OwoColorize;
-use inquire::{CustomType, Select};
-
-use crate::commands::account::MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH;
-
 mod add_key;
 mod sign_as;
 
@@ -42,133 +37,15 @@ impl NewAccountContext {
 
 impl NewAccount {
     pub fn input_new_account_id(
-        context: &crate::GlobalContext,
+        _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        loop {
-            let new_account_id: crate::types::account_id::AccountId =
-                CustomType::new("What is the new account ID?").prompt()?;
-
-            if context.offline {
-                return Ok(Some(new_account_id));
-            }
-
-            #[derive(derive_more::Display)]
-            enum ConfirmOptions {
-                #[display(
-                    "Yes, I want to check that <{account_id}> account does not exist. (It is free of charge, and only requires Internet access)"
-                )]
-                Yes {
-                    account_id: crate::types::account_id::AccountId,
-                },
-                #[display("No, I know that this account does not exist and I want to proceed.")]
-                No,
-            }
-            let select_choose_input =
-            Select::new("Do you want to check the existence of the specified account so that you don't waste tokens with sending a transaction that won't succeed?",
-                vec![ConfirmOptions::Yes{account_id: new_account_id.clone()}, ConfirmOptions::No],
-                )
-                .prompt()?;
-            if let ConfirmOptions::Yes { account_id } = select_choose_input {
-                let network_where_account_exist =
-                    match crate::common::find_network_where_account_exist(
-                        context,
-                        account_id.clone().into(),
-                    ) {
-                        Ok(network_config) => network_config,
-                        Err(err) => {
-                            tracing::warn!("{}{}",
-                                "Missing account information.".red(),
-                                crate::common::indent_payload(&format!("\n{}{}",
-                                    format!("{err}").red(),
-                                    "\nIt is currently possible to continue creating an account offline.\nYou can sign and send the created transaction later.\n "
-                                    .yellow()
-                                ))
-                            );
-                            return Ok(Some(new_account_id));
-                        }
-                    };
-
-                if let Some(network_config) = network_where_account_exist {
-                    tracing::warn!("{}", format!(
-                        "Heads up! You will only waste tokens if you proceed creating <{}> account on <{}> as the account already exists.",
-                        &account_id, network_config.network_name
-                    ).red()
-                    );
-                    if !crate::common::ask_if_different_account_id_wanted()? {
-                        return Ok(Some(account_id));
-                    };
-                } else if account_id.0.as_str().chars().count()
-                    < MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH
-                    && account_id.0.is_top_level()
-                {
-                    tracing::warn!(
-                        "Account <{}> has <{}> character count. Only the registrar account can create new top level accounts that are shorter than {} characters. Read more about it in nomicon: https://nomicon.io/DataStructures/Account#top-level-accounts",
-                        &account_id,
-                        &account_id.0.as_str().chars().count(),
-                        MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH,
-                    );
-                    if !crate::common::ask_if_different_account_id_wanted()? {
-                        return Ok(Some(account_id));
-                    };
-                } else {
-                    tracing::info!("{}", format!("The account <{}> does not exist on [{}] networks. So, you can create this account.",
-                        account_id,
-                        context.config.network_names().join(", ")).green()
-                    );
-                    let parent_account_id =
-                        account_id.clone().get_parent_account_id_from_sub_account();
-                    if !near_primitives::types::AccountId::from(parent_account_id.clone())
-                        .is_top_level()
-                    {
-                        let network_where_account_exist =
-                            match crate::common::find_network_where_account_exist(
-                                context,
-                                parent_account_id.clone().into(),
-                            ) {
-                                Ok(network_config) => network_config,
-                                Err(err) => {
-                                    tracing::warn!("{}{}",
-                                        "Missing parent account information.".red(),
-                                        crate::common::indent_payload(&format!("\n{}{}",
-                                            format!("{err}").red(),
-                                            "\nIt is currently possible to continue creating an account offline.\nYou can sign and send the created transaction later.\n "
-                                            .yellow()
-                                        ))
-                                    );
-                                    return Ok(Some(new_account_id));
-                                }
-                            };
-                        if network_where_account_exist.is_none() {
-                            tracing::warn!("{}",
-                                format!("The parent account <{}> does not exist on [{}] networks. Therefore, you cannot create an account <{}>.",
-                                parent_account_id,
-                                context.config.network_names().join(", "),
-                                account_id).red()
-                            );
-                            if !crate::common::ask_if_different_account_id_wanted()? {
-                                return Ok(Some(account_id));
-                            };
-                        } else {
-                            return Ok(Some(account_id));
-                        }
-                    } else {
-                        return Ok(Some(account_id));
-                    }
-                };
-            } else {
-                return Ok(Some(new_account_id));
-            };
-        }
+        Err(crate::common::non_interactive_input_required("new account ID").into())
     }
 
     fn input_initial_balance(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            CustomType::new("Enter the amount of NEAR tokens you want to fund the new account with (example: 10 NEAR or 0.5 NEAR or 10000 yoctonear):")
-                .with_starting_input("0.1 NEAR")
-                .prompt()?
-        ))
+        Err(crate::common::non_interactive_input_required("initial balance").into())
     }
 }
 

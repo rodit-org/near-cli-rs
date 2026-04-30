@@ -1,6 +1,3 @@
-use color_eyre::owo_colors::OwoColorize;
-use inquire::Select;
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = super::super::super::ConstructTransactionContext)]
 #[interactive_clap(output_context = DeleteAccountActionContext)]
@@ -45,80 +42,8 @@ impl From<DeleteAccountActionContext> for super::super::super::ConstructTransact
 
 impl DeleteAccountAction {
     pub fn input_beneficiary_id(
-        context: &super::super::super::ConstructTransactionContext,
+        _context: &super::super::super::ConstructTransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        loop {
-            let beneficiary_account_id = if let Some(account_id) =
-                crate::common::input_non_signer_account_id_from_used_account_list(
-                    &context.global_context.config.credentials_home_dir,
-                    "What is the beneficiary account ID?",
-                )? {
-                account_id
-            } else {
-                return Ok(None);
-            };
-
-            if beneficiary_account_id.0 == context.signer_account_id {
-                tracing::warn!("{}", "You have selected a beneficiary account ID that will now be deleted. This will result in the loss of your funds. So make your choice again.".red());
-                continue;
-            }
-
-            if context.global_context.offline {
-                return Ok(Some(beneficiary_account_id));
-            }
-
-            #[derive(derive_more::Display)]
-            enum ConfirmOptions {
-                #[display(
-                    "Yes, I want to check if account <{account_id}> exists. (It is free of charge, and only requires Internet access)"
-                )]
-                Yes {
-                    account_id: crate::types::account_id::AccountId,
-                },
-                #[display("No, I know this account exists and want to continue.")]
-                No,
-            }
-            let select_choose_input =
-                Select::new("Do you want to check the existence of the specified account so that you don't lose tokens?",
-                    vec![ConfirmOptions::Yes{account_id: beneficiary_account_id.clone()}, ConfirmOptions::No],
-                    )
-                    .prompt()?;
-            if let ConfirmOptions::Yes { account_id } = select_choose_input {
-                let network_where_account_exist =
-                    match crate::common::find_network_where_account_exist(
-                        &context.global_context,
-                        account_id.clone().into(),
-                    ) {
-                        Ok(network_config) => network_config,
-                        Err(err) => {
-                            tracing::warn!("{}{}", 
-                                "Cannot verify beneficiary. Proceeding may result in total loss of NEAR tokens of the deleting account.".red(),
-                                crate::common::indent_payload(&format!("\n{}{}",
-                                    format!("{err}").red(),
-                                    "\nIt is currently possible to continue deleting an account offline.\nYou can sign and send the created transaction later.\n "
-                                    .yellow()
-                                ))
-                            );
-                            return Ok(Some(account_id));
-                        }
-                    };
-                if network_where_account_exist.is_none() {
-                    tracing::warn!("{}",
-                        format!(
-                            "Heads up! You will lose remaining NEAR tokens on the account you delete if you specify the account <{}> as the beneficiary as it does not exist on [{}] networks.",
-                            account_id,
-                            context.global_context.config.network_names().join(", ")
-                        ).red()
-                    );
-                    if !crate::common::ask_if_different_account_id_wanted()? {
-                        return Ok(Some(account_id));
-                    }
-                } else {
-                    return Ok(Some(account_id));
-                };
-            } else {
-                return Ok(Some(beneficiary_account_id));
-            };
-        }
+        Err(crate::common::non_interactive_input_required("beneficiary account ID").into())
     }
 }

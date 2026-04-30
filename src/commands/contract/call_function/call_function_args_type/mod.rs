@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
 use color_eyre::eyre::Context;
-use inquire::Select;
-use strum::{EnumDiscriminants, EnumIter, EnumMessage, IntoEnumIterator};
+use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 #[derive(Debug, EnumDiscriminants, Clone, clap::ValueEnum)]
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
@@ -72,18 +71,7 @@ impl std::fmt::Display for FunctionArgsTypeDiscriminants {
 }
 
 pub fn input_function_args_type() -> color_eyre::eyre::Result<Option<FunctionArgsType>> {
-    let variants = FunctionArgsTypeDiscriminants::iter().collect::<Vec<_>>();
-    let selected = Select::new(
-        "How would you like to pass the function arguments?",
-        variants,
-    )
-    .prompt()?;
-    match selected {
-        FunctionArgsTypeDiscriminants::JsonArgs => Ok(Some(FunctionArgsType::JsonArgs)),
-        FunctionArgsTypeDiscriminants::TextArgs => Ok(Some(FunctionArgsType::TextArgs)),
-        FunctionArgsTypeDiscriminants::Base64Args => Ok(Some(FunctionArgsType::Base64Args)),
-        FunctionArgsTypeDiscriminants::FileArgs => Ok(Some(FunctionArgsType::FileArgs)),
-    }
+    Err(crate::common::non_interactive_input_required("function call arguments type").into())
 }
 
 pub fn function_args(

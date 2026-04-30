@@ -1,5 +1,4 @@
 use color_eyre::eyre::{Context, ContextCompat};
-use inquire::CustomType;
 use interactive_clap::ToCliArgs;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
@@ -126,13 +125,6 @@ impl TransactionInfoContext {
                     cmd_cli_args.extend(skip_action.to_cli_args());
 
                     let near_cli_exec_path = crate::common::get_near_exec_path();
-                    if let crate::Verbosity::Interactive | crate::Verbosity::TeachMe =
-                        previous_context.verbosity
-                    {
-                        eprintln!(
-                            "Here is your console command to run archive transaction. You can to edit it or re-run (printed to stdout):"
-                        )
-                    }
                     println!(
                         "{}",
                         shell_words::join(std::iter::once(near_cli_exec_path).chain(cmd_cli_args))
@@ -207,9 +199,9 @@ fn action_transformation(
             )))
         }
         Action::DeployContract(deploy_contract_action) => {
-            let file_path = CustomType::<crate::types::path_buf::PathBuf>::new("Enter the file path where to save the contract:")
-                .with_starting_input("reconstruct-transaction-deploy-code.wasm")
-                .prompt()?;
+            let file_path = crate::types::path_buf::PathBuf::from(std::path::PathBuf::from(
+                "reconstruct-transaction-deploy-code.wasm",
+            ));
 
             download_code(
                 &crate::commands::contract::download_wasm::ContractType::Regular(receiver_id),
@@ -266,9 +258,9 @@ fn action_transformation(
             panic!("Internal error: Delegate action should have been handled before calling action_transformation.");
         }
         Action::DeployGlobalContract(action) => {
-            let file_path = CustomType::<crate::types::path_buf::PathBuf>::new("Enter the file path where to save the contract:")
-                .with_starting_input("reconstruct-transaction-deploy-code.wasm")
-                .prompt()?;
+            let file_path = crate::types::path_buf::PathBuf::from(std::path::PathBuf::from(
+                "reconstruct-transaction-deploy-code.wasm",
+            ));
 
             let code_hash = near_primitives::hash::CryptoHash::try_from(action.code.as_ref()).map_err(|_| {
                 color_eyre::Report::msg("Internal error: Failed to calculate code hash from the deploy global contract action code.".to_string())

@@ -1,5 +1,3 @@
-use inquire::CustomType;
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = super::SendFtCommandContext)]
 #[interactive_clap(output_context = AmountFtContext)]
@@ -49,27 +47,10 @@ impl AmountFtContext {
 
 impl AmountFt {
     fn input_ft_transfer_amount(
-        context: &super::SendFtCommandContext,
+        _context: &super::SendFtCommandContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::ft_properties::FungibleTokenTransferAmount>>
     {
-        let ft_metadata = context.ft_contract.ft_metadata.clone();
-
-        Ok(Some(
-            CustomType::<crate::types::ft_properties::FungibleTokenTransferAmount>::new(&format!(
-                "Enter an FT amount to transfer (example: 10 {symbol} or 0.5 {symbol} or \"all\" to transfer the entire amount of fungible tokens from your account):",
-                symbol = ft_metadata.symbol
-            ))
-            .with_validator(move |ft: &crate::types::ft_properties::FungibleTokenTransferAmount| {
-                match ft.normalize(&ft_metadata) {
-                    Err(err) => Ok(inquire::validator::Validation::Invalid(
-                        inquire::validator::ErrorMessage::Custom(err.to_string()),
-                    )),
-                    Ok(_) => Ok(inquire::validator::Validation::Valid),
-                }
-            })
-            .with_formatter(&|ft| ft.to_string())
-            .prompt()?,
-        ))
+        Err(crate::common::non_interactive_input_required("FT transfer amount").into())
     }
 }
 
