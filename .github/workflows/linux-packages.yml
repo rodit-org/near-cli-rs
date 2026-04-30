@@ -1,0 +1,57 @@
+name: Linux Packages
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-upload-linux-packages:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes libudev-dev musl-tools rpm
+
+      - name: Install packaging tools
+        run: |
+          cargo install --locked cargo-deb
+          cargo install --locked cargo-generate-rpm
+
+      - name: Build release binary (GNU)
+        run: cargo build --release
+
+      - name: Build deb package
+        run: |
+          mkdir -p target/packages
+          cargo deb --no-build --output target/packages/
+
+      - name: Build rpm package
+        run: |
+          cargo generate-rpm --output target/packages/
+
+      - name: Build portable musl tarball
+        run: |
+          cargo build --release --target x86_64-unknown-linux-musl
+          pkg_name="near-cli-rs-ai-${{ github.event.release.tag_name }}-x86_64-unknown-linux-musl.tar.gz"
+          tar -C target/x86_64-unknown-linux-musl/release -czf "target/packages/${pkg_name}" near-cli-rs-ai
+
+      - name: Upload packages to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" target/packages/* --clobber

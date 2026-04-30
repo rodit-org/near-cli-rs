@@ -36,6 +36,16 @@ assets = [
     ["LICENSE-APACHE", "usr/share/doc/near-cli-rs-ai/LICENSE-APACHE", "644"],
 ]
 
+[package.metadata.generate-rpm]
+name = "near-cli-rs-ai"
+license = "MIT OR Apache-2.0"
+assets = [
+    { source = "target/release/near-cli-rs-ai", dest = "/usr/bin/near-cli-rs-ai", mode = "755" },
+    { source = "README.md", dest = "/usr/share/doc/near-cli-rs-ai/README.md", mode = "644", doc = true },
+    { source = "LICENSE-MIT", dest = "/usr/share/licenses/near-cli-rs-ai/LICENSE-MIT", mode = "644", doc = true },
+    { source = "LICENSE-APACHE", dest = "/usr/share/licenses/near-cli-rs-ai/LICENSE-APACHE", mode = "644", doc = true },
+]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
@@ -202,7 +212,7 @@ install-path = "CARGO_HOME"
 install-updater = false
 
 [workspace.metadata.dist.github-custom-runners]
-aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"
+aarch64-unknown-linux-gnu = "ubuntu-22.04-arm"
 x86_64-unknown-linux-gnu = "ubuntu-22.04"
 x86_64-pc-windows-msvc = "windows-2022"
 aarch64-pc-windows-msvc = "windows-2025"
