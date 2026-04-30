@@ -1,7 +1,6 @@
 use std::io::Write;
 
 use color_eyre::eyre::Context;
-use inquire::CustomType;
 
 use super::super::commands::transaction::send_meta_transaction::FileSignedMetaTransaction;
 use super::super::commands::transaction::send_signed_transaction::FileSignedTransaction;
@@ -93,12 +92,6 @@ impl SaveToFile {
                 "signed-meta-transaction-info.json"
             }
         };
-        Ok(Some(
-            CustomType::new(
-                "What is the location of the file to save the transaction information?",
-            )
-            .with_starting_input(starting_input)
-            .prompt()?,
-        ))
+        Ok(Some(starting_input.parse()?))
     }
 }

@@ -1,5 +1,3 @@
-use inquire::CustomType;
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = super::super::super::ConstructTransactionContext)]
 #[interactive_clap(output_context = FunctionCallActionContext)]
@@ -118,23 +116,7 @@ impl PrepaidGas {
     fn input_gas(
         _context: &FunctionCallActionContext,
     ) -> color_eyre::eyre::Result<Option<crate::common::NearGas>> {
-        Ok(Some(
-            CustomType::new("Enter gas for function call:")
-                .with_starting_input("100 TeraGas")
-                .with_validator(move |gas: &crate::common::NearGas| {
-                    if gas > &near_gas::NearGas::from_tgas(1000) {
-                        Ok(inquire::validator::Validation::Invalid(
-                            inquire::validator::ErrorMessage::Custom(
-                                "You need to enter a value of no more than 1000 TeraGas"
-                                    .to_string(),
-                            ),
-                        ))
-                    } else {
-                        Ok(inquire::validator::Validation::Valid)
-                    }
-                })
-                .prompt()?,
-        ))
+        Ok(Some("100 Tgas".parse()?))
     }
 }
 
@@ -187,10 +169,6 @@ impl Deposit {
     fn input_deposit(
         _context: &PrepaidGasContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            CustomType::new("Enter deposit for a function call (example: 10 NEAR or 0.5 near or 10000 yoctonear):")
-                .with_starting_input("0 NEAR")
-                .prompt()?
-        ))
+        Ok(Some("0 NEAR".parse()?))
     }
 }

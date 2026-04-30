@@ -1,5 +1,4 @@
 use color_eyre::{eyre::Context, owo_colors::OwoColorize};
-use inquire::CustomType;
 use near_primitives::transaction::{Transaction, TransactionV0};
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
@@ -63,10 +62,15 @@ impl SignMpc {
     pub fn input_admin_account_id(
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_signer_account_id_from_used_account_list(
-            &context.global_context.config.credentials_home_dir,
-            "What is the Admin AccountId?",
-        )
+        let known_accounts =
+            crate::common::get_used_account_list(&context.global_context.config.credentials_home_dir)
+                .into_iter()
+                .map(|account| account.account_id.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <admin-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -249,13 +253,10 @@ impl MpcDeriveKey {
     pub fn input_derivation_path(
         context: &MpcKeyTypeContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        let derivation_path = inquire::Text::new("What is the derivation path?")
-            .with_initial_value(&format!(
-                "{}-{}",
-                context.admin_account_id, context.tx_context.prepopulated_transaction.signer_id
-            ))
-            .prompt()?;
-        Ok(Some(derivation_path))
+        Ok(Some(format!(
+            "{}-{}",
+            context.admin_account_id, context.tx_context.prepopulated_transaction.signer_id
+        )))
     }
 }
 
@@ -331,30 +332,7 @@ impl PrepaidGas {
     pub fn input_gas(
         _context: &MpcDeriveKeyContext,
     ) -> color_eyre::eyre::Result<Option<crate::common::NearGas>> {
-        Ok(Some(
-            CustomType::new(
-                "What is the gas limit for signing with MPC (if you're not sure, keep 15 Tgas)?",
-            )
-            .with_starting_input("15 Tgas")
-            .with_validator(move |gas: &crate::common::NearGas| {
-                if gas < &near_gas::NearGas::from_tgas(15) {
-                    Ok(inquire::validator::Validation::Invalid(
-                        inquire::validator::ErrorMessage::Custom(
-                            "Sign call to MPC contract requires minimum of 15 TeraGas".to_string(),
-                        ),
-                    ))
-                } else if gas > &near_gas::NearGas::from_tgas(1000) {
-                    Ok(inquire::validator::Validation::Invalid(
-                        inquire::validator::ErrorMessage::Custom(
-                            "You need to enter a value of no more than 1000 TeraGas".to_string(),
-                        ),
-                    ))
-                } else {
-                    Ok(inquire::validator::Validation::Valid)
-                }
-            })
-            .prompt()?,
-        ))
+        Ok(Some("15 Tgas".parse()?))
     }
 }
 
@@ -463,25 +441,7 @@ impl Deposit {
     pub fn input_deposit(
         _context: &PrepaidGasContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            CustomType::new(
-                "What is the deposit for MPC contract call (if unsure, keep 1 yoctoNEAR)?",
-            )
-            .with_starting_input("1 yoctoNEAR")
-            .with_validator(move |deposit: &crate::types::near_token::NearToken| {
-                if deposit < &crate::types::near_token::NearToken::from_yoctonear(1) {
-                    Ok(inquire::validator::Validation::Invalid(
-                        inquire::validator::ErrorMessage::Custom(
-                            "Sign call to MPC contract requires deposit no lower than 1 yoctoNEAR"
-                                .to_string(),
-                        ),
-                    ))
-                } else {
-                    Ok(inquire::validator::Validation::Valid)
-                }
-            })
-            .prompt()?,
-        ))
+        Ok(Some("1 yoctonear".parse()?))
     }
 }
 
@@ -646,52 +606,23 @@ pub fn dao_sign_with_mpc_after_send_flow(
     unsigned_mpc_transaction: &near_primitives::transaction::Transaction,
     original_sign_request: &mpc_sign_request::MpcSignRequest,
 ) -> color_eyre::eyre::Result<()> {
-    use tracing_indicatif::suspend_tracing_indicatif;
-
-    let signed_transaction = loop {
-        let transaction_hash = match suspend_tracing_indicatif(|| {
-            inquire::CustomType::new("Enter the transaction hash of the executed DAO proposal:")
-                .prompt()
-        }) {
-            Ok(tx_hash) => tx_hash,
-            Err(
-                inquire::error::InquireError::OperationCanceled
-                | inquire::error::InquireError::OperationInterrupted,
-            ) => {
-                return Ok(());
-            }
-            Err(err) => {
-                eprintln!("{}", format!("{err}").red());
-                continue;
-            }
-        };
-
-        let signed_transaction = match fetch_mpc_contract_response_from_dao_tx(
-            network_config,
-            original_sign_request,
-            transaction_hash,
-            "near".parse()?,
-            outcome_view.transaction.receiver_id.clone(),
-        ) {
-            Ok(sign_result) => {
-                let signature: near_crypto::Signature = sign_result.into();
-
-                near_primitives::transaction::SignedTransaction::new(
-                    signature,
-                    unsigned_mpc_transaction.clone(),
-                )
-            }
-            Err(err) => {
-                eprintln!(
-                    "{}",
-                    format!("Failed to get signature from MPC contract:\n   {err}").red()
-                );
-                continue;
-            }
-        };
-
-        break signed_transaction;
-    };
+    let tx_hash_str = std::env::var("NEAR_CLI_DAO_TX_HASH").map_err(|_| {
+        color_eyre::eyre::eyre!(
+            "Missing DAO transaction hash. Set NEAR_CLI_DAO_TX_HASH to run this flow non-interactively."
+        )
+    })?;
+    let transaction_hash: near_primitives::hash::CryptoHash =
+        tx_hash_str.parse().map_err(|err| color_eyre::eyre::eyre!("{err}"))?;
+    let sign_result = fetch_mpc_contract_response_from_dao_tx(
+        network_config,
+        original_sign_request,
+        transaction_hash,
+        "near".parse()?,
+        outcome_view.transaction.receiver_id.clone(),
+    )?;
+    let signature: near_crypto::Signature = sign_result.into();
+    let signed_transaction =
+        near_primitives::transaction::SignedTransaction::new(signature, unsigned_mpc_transaction.clone());
 
     let submit_context = super::SubmitContext {
         network_config: network_config.clone(),
@@ -818,68 +749,9 @@ fn fetch_mpc_contract_response_from_dao_tx(
 }
 
 fn prompt_and_submit(submit_context: super::SubmitContext) -> color_eyre::eyre::Result<()> {
-    use strum::IntoEnumIterator;
-
-    let choices: Vec<_> = super::SubmitDiscriminants::iter()
-        .map(|variant| {
-            let message = variant.get_message().unwrap_or("Unknown");
-            (message.to_string(), variant)
-        })
-        .collect();
-
-    let display_options: Vec<&str> = choices.iter().map(|(msg, _)| msg.as_str()).collect();
-
-    let selected_msg = tracing_indicatif::suspend_tracing_indicatif(|| {
-        inquire::Select::new("How would you like to proceed?", display_options).prompt()
-    })?;
-
-    let selected = choices
-        .iter()
-        .find(|(msg, _)| msg.as_str() == selected_msg)
-        .map(|(_, variant)| variant)
-        .unwrap();
-
-    match selected {
-        super::SubmitDiscriminants::Send => {
-            super::send::SendContext::from_previous_context(
-                submit_context,
-                &super::send::InteractiveClapContextScopeForSend { wait_until: None },
-            )?;
-        }
-        super::SubmitDiscriminants::Display => {
-            super::display::DisplayContext::from_previous_context(
-                submit_context,
-                &super::display::InteractiveClapContextScopeForDisplay {},
-            )?;
-        }
-        super::SubmitDiscriminants::SaveToFile => {
-            let file_path: crate::types::path_buf::PathBuf = loop {
-                match tracing_indicatif::suspend_tracing_indicatif(|| {
-                    CustomType::new(
-                        "What is the location of the file to save the transaction information?",
-                    )
-                    .with_starting_input("signed-transaction-info.json")
-                    .prompt()
-                }) {
-                    Ok(file_path) => break file_path,
-                    Err(
-                        inquire::error::InquireError::OperationCanceled
-                        | inquire::error::InquireError::OperationInterrupted,
-                    ) => {
-                        return Ok(());
-                    }
-                    Err(err) => {
-                        eprintln!("{err}");
-                        continue;
-                    }
-                }
-            };
-            super::save_to_file::SaveToFileContext::from_previous_context(
-                submit_context,
-                &super::save_to_file::InteractiveClapContextScopeForSaveToFile { file_path },
-            )?;
-        }
-    }
-
+    super::send::SendContext::from_previous_context(
+        submit_context,
+        &super::send::InteractiveClapContextScopeForSend { wait_until: None },
+    )?;
     Ok(())
 }

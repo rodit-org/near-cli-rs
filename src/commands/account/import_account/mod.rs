@@ -1,8 +1,7 @@
 #![allow(clippy::enum_variant_names, clippy::large_enum_variant)]
-use std::{str::FromStr, vec};
+use std::{io, str::FromStr};
 
 use color_eyre::eyre::Context;
-use inquire::{CustomType, Select};
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use near_primitives::account::id::AccountType;
@@ -75,20 +74,7 @@ pub fn login(
                 "{}",
                 crate::common::indent_payload(error_message)
             );
-
-            #[derive(strum_macros::Display)]
-            enum ConfirmOptions {
-                #[strum(to_string = "Yes, I want to re-enter the account_id.")]
-                Yes,
-                #[strum(to_string = "No, I want to save the access key information.")]
-                No,
-            }
-            let select_choose_input = Select::new(
-                "Would you like to re-enter the account_id?",
-                vec![ConfirmOptions::Yes, ConfirmOptions::No],
-            )
-            .prompt()?;
-            if let ConfirmOptions::No = select_choose_input {
+            if !confirm_retry_account_id()? {
                 break account_id_from_cli;
             }
         } else {
@@ -107,7 +93,28 @@ pub fn login(
 }
 
 fn input_account_id() -> color_eyre::eyre::Result<near_primitives::types::AccountId> {
-    Ok(CustomType::new("Enter account ID:").prompt()?)
+    eprintln!("Enter account ID:");
+    let mut account_id = String::new();
+    io::stdin().read_line(&mut account_id)?;
+    Ok(account_id.trim().parse()?)
+}
+
+fn confirm_retry_account_id() -> color_eyre::eyre::Result<bool> {
+    eprintln!("Re-enter account_id? [y/N]");
+    let mut answer = String::new();
+    io::stdin().read_line(&mut answer)?;
+    let answer = answer.trim().to_ascii_lowercase();
+    Ok(matches!(answer.as_str(), "y" | "yes"))
+}
+
+fn use_legacy_keychain() -> bool {
+    matches!(
+        std::env::var("NEAR_CLI_USE_LEGACY_KEYCHAIN")
+            .unwrap_or_default()
+            .to_ascii_lowercase()
+            .as_str(),
+        "1" | "true" | "yes"
+    )
 }
 
 fn save_access_key(
@@ -117,24 +124,7 @@ fn save_access_key(
     network_config: crate::config::NetworkConfig,
     credentials_home_dir: std::path::PathBuf,
 ) -> crate::CliResult {
-    #[derive(strum_macros::Display)]
-    enum SelectStorage {
-        #[strum(to_string = "Store the access key in my keychain")]
-        SaveToKeychain,
-        #[strum(
-            to_string = "Store the access key in my legacy keychain (compatible with the old near CLI)"
-        )]
-        SaveToLegacyKeychain,
-    }
-    let selection = Select::new(
-        "Select a keychain to save the access key to:",
-        vec![
-            SelectStorage::SaveToKeychain,
-            SelectStorage::SaveToLegacyKeychain,
-        ],
-    )
-    .prompt()?;
-    if let SelectStorage::SaveToKeychain = selection {
+    if !use_legacy_keychain() {
         let storage_message =
             crate::common::save_access_key_to_keychain_or_save_to_legacy_keychain(
                 network_config,

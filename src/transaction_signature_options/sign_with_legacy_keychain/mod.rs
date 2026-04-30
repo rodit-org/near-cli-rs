@@ -1,9 +1,6 @@
 extern crate dirs;
 
-use std::str::FromStr;
-
 use color_eyre::eyre::{ContextCompat, WrapErr};
-use inquire::{CustomType, Select};
 use near_primitives::transaction::Transaction;
 use near_primitives::transaction::TransactionV0;
 
@@ -275,30 +272,9 @@ impl SignLegacyKeychain {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::public_key::PublicKey>> {
         if context.global_context.offline {
-            let network_config = context.network_config.clone();
-
-            let mut path =
-                std::path::PathBuf::from(&context.global_context.config.credentials_home_dir);
-
-            let dir_name = network_config.network_name;
-            path.push(&dir_name);
-
-            path.push(context.prepopulated_transaction.signer_id.to_string());
-
-            let signer_dir = path.read_dir()?;
-
-            let key_list = signer_dir
-                .filter_map(|entry| entry.ok())
-                .filter_map(|entry| entry.file_name().into_string().ok())
-                .filter(|file_name_str| file_name_str.starts_with("ed25519_"))
-                .map(|file_name_str| file_name_str.replace(".json", "").replace('_', ":"))
-                .collect::<Vec<_>>();
-
-            let selected_input = Select::new("Choose a public key:", key_list).prompt()?;
-
-            return Ok(Some(crate::types::public_key::PublicKey::from_str(
-                &selected_input,
-            )?));
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --signer-public-key in offline mode."
+            ));
         }
         Ok(None)
     }
@@ -307,8 +283,8 @@ impl SignLegacyKeychain {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<u64>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<u64>::new("Enter a nonce for the access key:").prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --nonce in offline mode."
             ));
         }
         Ok(None)
@@ -318,11 +294,8 @@ impl SignLegacyKeychain {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::crypto_hash::CryptoHash>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<crate::types::crypto_hash::CryptoHash>::new(
-                    "Enter recent block hash:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-hash in offline mode."
             ));
         }
         Ok(None)
@@ -332,11 +305,8 @@ impl SignLegacyKeychain {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<near_primitives::types::BlockHeight>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<near_primitives::types::BlockHeight>::new(
-                    "Enter recent block height:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-height in offline mode."
             ));
         }
         Ok(None)

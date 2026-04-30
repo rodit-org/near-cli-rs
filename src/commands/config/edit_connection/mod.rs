@@ -1,5 +1,3 @@
-use inquire::{Select, Text};
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = crate::GlobalContext)]
 #[interactive_clap(output_context = EditConnectionContext)]
@@ -47,7 +45,16 @@ impl EditConnection {
     fn input_connection_name(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        crate::common::input_network_name(&context.config, &[])
+        let available_connections = context
+            .config
+            .network_connection
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <connection-name>. Provide it explicitly to run non-interactively. Available connections: {available_connections}"
+        ))
     }
 }
 
@@ -169,26 +176,22 @@ impl ParameterContext {
 impl Parameter {
     fn input_key(context: &EditConnectionContext) -> color_eyre::eyre::Result<Option<String>> {
         let variants = context.network_config.get_fields()?;
-
-        let select_submit = Select::new("Which setting do you want to change?", variants).prompt();
-        match select_submit {
-            Ok(value) => Ok(Some(
-                value.split_once(':').expect("Internal error").0.to_string(),
-            )),
-            Err(
-                inquire::error::InquireError::OperationCanceled
-                | inquire::error::InquireError::OperationInterrupted,
-            ) => Ok(None),
-            Err(err) => Err(err.into()),
-        }
+        let available_keys = variants
+            .iter()
+            .filter_map(|value| value.split_once(':').map(|(key, _)| key.trim().to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument --key. Provide it explicitly to run non-interactively. Available keys: {available_keys}"
+        ))
     }
 
     pub fn input_value(
-        _context: &EditConnectionContext,
+        context: &EditConnectionContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        let value: String =
-            Text::new("Enter a new value for this parameter (if you want to remove an optional parameter, use \"null\"):")
-                .prompt()?;
-        Ok(Some(value))
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument --value for connection \"{}\". Provide it explicitly to run non-interactively.",
+            context.connection_name
+        ))
     }
 }

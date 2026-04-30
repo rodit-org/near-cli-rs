@@ -1,7 +1,7 @@
 #[cfg(windows)]
-const BIN_NAME: &str = "near.exe";
+const BIN_NAME: &str = "near-cli-rs-ai.exe";
 #[cfg(not(windows))]
-const BIN_NAME: &str = "near";
+const BIN_NAME: &str = "near-cli-rs-ai";
 
 use color_eyre::{eyre::WrapErr, owo_colors::OwoColorize};
 
@@ -30,11 +30,11 @@ impl SelfUpdateCommandContext {
             .build()
             .wrap_err("Failed to build self_update")?
             .update()
-            .wrap_err("Failed to update near CLI")?;
+            .wrap_err("Failed to update near-cli-rs-ai CLI")?;
         if let self_update::Status::Updated(release) = status {
             println!(
                 "\n{}{}{}\n",
-                "Welcome to `near` CLI v".green().bold(),
+                "Welcome to `near-cli-rs-ai` CLI v".green().bold(),
                 release.green().bold(),
                 "!".green().bold()
             );
@@ -56,7 +56,7 @@ pub fn get_latest_version() -> color_eyre::eyre::Result<String> {
     Ok(self_update::backends::github::Update::configure()
         .repo_owner("near")
         .repo_name("near-cli-rs")
-        .bin_name("near")
+        .bin_name("near-cli-rs-ai")
         .current_version(self_update::cargo_crate_version!())
         .build()
         .wrap_err("Failed to build self_update")?

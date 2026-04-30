@@ -41,10 +41,14 @@ impl AddKeyCommand {
     pub fn input_owner_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "Which account do you want to add an access key to?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <owner-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 

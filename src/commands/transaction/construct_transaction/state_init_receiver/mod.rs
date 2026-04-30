@@ -64,10 +64,14 @@ impl StateInitWithContractRefByAccount {
     pub fn input_account_id(
         context: &super::ConstructTransactionSenderContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_signer_account_id_from_used_account_list(
-            &context.global_context.config.credentials_home_dir,
-            "Enter the global contract account ID: ",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.global_context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -313,11 +317,8 @@ impl DataFromFile {
     pub fn input_file_path(
         _context: &StateInitModeContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::path_buf::PathBuf>> {
-        Ok(Some(
-            inquire::CustomType::new(
-                "Enter the path to the file with base64-encoded key-value JSON data:",
-            )
-            .prompt()?,
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <file-path>. Provide it explicitly to run non-interactively."
         ))
     }
 }
@@ -334,11 +335,8 @@ pub struct DataFromJson {
 
 impl DataFromJson {
     pub fn input_data(_context: &StateInitModeContext) -> color_eyre::eyre::Result<Option<String>> {
-        Ok(Some(
-            inquire::Text::new(
-                "Enter the base64-encoded key-value JSON data (e.g. '{\"AAEC\": \"AwQF\"}'):",
-            )
-            .prompt()?,
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <data>. Provide it explicitly to run non-interactively."
         ))
     }
 }
@@ -444,11 +442,7 @@ impl Deposit {
     pub fn input_deposit(
         _context: &StateInitDataContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            inquire::CustomType::new("What is the deposit for the state init call?")
-                .with_starting_input("0 NEAR")
-                .prompt()?,
-        ))
+        Ok(Some("0 NEAR".parse()?))
     }
 }
 

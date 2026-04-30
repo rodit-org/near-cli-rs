@@ -1,7 +1,6 @@
 use std::io::Write;
 
 use color_eyre::eyre::Context;
-use inquire::CustomType;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::common::JsonRpcClientExt;
@@ -75,11 +74,7 @@ impl DownloadContract {
     fn input_file_path(
         _context: &ArgsForDownloadContract,
     ) -> color_eyre::eyre::Result<Option<crate::types::path_buf::PathBuf>> {
-        Ok(Some(
-            CustomType::new("Enter the file path where to save the contract:")
-                .with_starting_input("contract.wasm")
-                .prompt()?,
-        ))
+        Ok(Some("contract.wasm".parse()?))
     }
 }
 
@@ -134,10 +129,14 @@ impl DownloadRegularContract {
     pub fn input_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the contract account ID?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -187,37 +186,20 @@ impl DownloadGlobalContractByAccountId {
     pub fn input_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the account ID of the global contract?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 
     pub fn input_code_hash(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::crypto_hash::CryptoHash>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a code hash for the global contract")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter a code hash for the global contract")]
-            No,
-        }
-
-        let select_choose_input = inquire::Select::new(
-            "Do you want to enter a code hash for a global contract?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                inquire::Text::new("Enter a code hash for a global contract:")
-                    .prompt()?
-                    .parse()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 }
 

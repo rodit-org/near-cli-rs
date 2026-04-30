@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use inquire::{CustomType, Select, Text};
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = super::super::UpdateSocialProfileContext)]
 #[interactive_clap(output_context = ManuallyContext)]
@@ -126,281 +124,66 @@ impl Manually {
     fn input_name(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a name for the account profile")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter a name for the account profile")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter a name for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter a name for the account profile:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_image_url(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the URL for the account profile image")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the URL of the account profile image")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter an account profile image URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let url: crate::types::url::Url =
-                CustomType::new("What is the account profile image URL?").prompt()?;
-            Ok(Some(url))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_image_ipfs_cid(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter ipfs_cid for the account profile image")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter ipfs_cid for the account profile image")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter ipfs_cid for the account profile image?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter ipfs_cid for the account's profile image:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_background_image_url(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(
-                to_string = "Yes, I want to enter the URL for the account profile background image"
-            )]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter the URL of the account profile background image"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter an account profile background image URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let url: crate::types::url::Url =
-                CustomType::new("What is the account profile background image URL?").prompt()?;
-            Ok(Some(url))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_background_image_ipfs_cid(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(
-                to_string = "Yes, I want to enter ipfs_cid for the account profile background image"
-            )]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter ipfs_cid for the account profile background image"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter ipfs_cid for the account profile background image?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter ipfs_cid for the account profile background image:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_description(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a description for the account profile")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter a description for the account profile")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter a description for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter a description for the account profile:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_twitter(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a Twitter nickname for the account profile")]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter a Twitter nickname for the account profile"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter a Twitter nickname for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter a Twitter nickname for the account profile:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_github(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a Github nickname for the account profile")]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter a Github nickname for the account profile"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter a Github nickname for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter a Github nickname for the account profile:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_telegram(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter a Telegram nickname for the account profile")]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter a Telegram nickname for the account profile"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter a Telegram nickname for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            Ok(Some(
-                Text::new("Enter a Telegram nickname for the account profile:").prompt()?,
-            ))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_website(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the website URL for the account profile")]
-            Yes,
-            #[strum(
-                to_string = "No, I don't want to enter the website URL for the account profile"
-            )]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the website URL for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let url: crate::types::url::Url =
-                CustomType::new("Enter the website URL for the account profile:").prompt()?;
-            Ok(Some(url))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 
     fn input_tags(
         _context: &super::super::UpdateSocialProfileContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::vec_string::VecString>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter tags for an account profile")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter tags for an account profile")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter tags for the account profile?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let tags: crate::types::vec_string::VecString =
-                CustomType::new("Enter a comma-separated list of tags for the account profile:")
-                    .prompt()?;
-            Ok(Some(tags))
-        } else {
-            Ok(None)
-        }
+        Ok(None)
     }
 }

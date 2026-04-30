@@ -1,5 +1,4 @@
 use color_eyre::eyre::{ContextCompat, WrapErr};
-use inquire::CustomType;
 use near_ledger::NEARLedgerError;
 use near_primitives::action::delegate::SignedDelegateAction;
 use near_primitives::borsh;
@@ -655,8 +654,8 @@ impl SignLedger {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<u64>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<u64>::new("Enter a nonce for the access key:").prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --nonce in offline mode."
             ));
         }
         Ok(None)
@@ -666,11 +665,8 @@ impl SignLedger {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::crypto_hash::CryptoHash>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<crate::types::crypto_hash::CryptoHash>::new(
-                    "Enter recent block hash:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-hash in offline mode."
             ));
         }
         Ok(None)
@@ -680,11 +676,8 @@ impl SignLedger {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<near_primitives::types::BlockHeight>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<near_primitives::types::BlockHeight>::new(
-                    "Enter recent block height:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-height in offline mode."
             ));
         }
         Ok(None)
@@ -693,9 +686,5 @@ impl SignLedger {
 
 pub fn input_seed_phrase_hd_path()
 -> color_eyre::eyre::Result<Option<crate::types::slip10::BIP32Path>> {
-    Ok(Some(
-        CustomType::new("Enter seed phrase HD Path (if you're not sure, leave blank for default):")
-            .with_starting_input("44'/397'/0'/0'/1'")
-            .prompt()?,
-    ))
+    Ok(Some("44'/397'/0'/0'/1'".parse()?))
 }

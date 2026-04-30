@@ -31,6 +31,15 @@ impl DeleteNetworkConnection {
     fn input_connection_name(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        crate::common::input_network_name(&context.config, &[])
+        let available_connections = context
+            .config
+            .network_connection
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <connection-name>. Provide it explicitly to run non-interactively. Available connections: {available_connections}"
+        ))
     }
 }

@@ -1,6 +1,3 @@
-use inquire::CustomType;
-use inquire::Text;
-
 pub mod dao_kind_arguments;
 pub mod dao_sign_with;
 
@@ -69,10 +66,15 @@ impl DaoProposal {
     pub fn input_dao_account_id(
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_signer_account_id_from_used_account_list(
-            &context.global_context.config.credentials_home_dir,
-            "What is the DAO member account ID?",
-        )
+        let known_accounts =
+            crate::common::get_used_account_list(&context.global_context.config.credentials_home_dir)
+                .into_iter()
+                .map(|account| account.account_id.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <dao-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -133,8 +135,8 @@ impl DaoProposalArguments {
     pub fn input_proposal_description(
         _context: &DaoProposalContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        Ok(Some(
-            Text::new("Enter a description for the DAO proposal:").prompt()?,
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <proposal-description>. Provide it explicitly to run non-interactively."
         ))
     }
 }
@@ -191,24 +193,7 @@ impl PrepaidGas {
     pub fn input_gas(
         _context: &DaoProposalArgumentsContext,
     ) -> color_eyre::eyre::Result<Option<crate::common::NearGas>> {
-        Ok(Some(
-            CustomType::new(
-                "What is the gas limit for adding a DAO proposal (if you're not sure, keep 10 Tgas)?",
-            )
-            .with_starting_input("10 Tgas")
-            .with_validator(move |gas: &crate::common::NearGas| {
-                if gas > &near_gas::NearGas::from_tgas(1000) {
-                    Ok(inquire::validator::Validation::Invalid(
-                        inquire::validator::ErrorMessage::Custom(
-                            "You need to enter a value of no more than 1000 TeraGas".to_string(),
-                        ),
-                    ))
-                } else {
-                    Ok(inquire::validator::Validation::Valid)
-                }
-            })
-            .prompt()?,
-        ))
+        Ok(Some("10 Tgas".parse()?))
     }
 }
 
@@ -265,11 +250,7 @@ impl Deposit {
     pub fn input_deposit(
         _context: &PrepaidGasContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            CustomType::new("Enter deposit for adding a DAO proposal:")
-                .with_starting_input("0 NEAR")
-                .prompt()?,
-        ))
+        Ok(Some("0 NEAR".parse()?))
     }
 }
 

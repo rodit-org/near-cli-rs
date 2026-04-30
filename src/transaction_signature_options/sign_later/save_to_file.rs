@@ -1,7 +1,6 @@
 use std::io::Write;
 
 use color_eyre::eyre::Context;
-use inquire::CustomType;
 
 #[derive(Debug, Clone, interactive_clap_derive::InteractiveClap)]
 #[interactive_clap(input_context = super::SignLaterContext)]
@@ -48,10 +47,6 @@ impl SaveToFile {
     fn input_file_path(
         _context: &super::SignLaterContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::path_buf::PathBuf>> {
-        Ok(Some(
-            CustomType::new("Enter the file path where to save the unsigned transaction:")
-                .with_starting_input("unsigned-transaction-info.json")
-                .prompt()?,
-        ))
+        Ok(Some("unsigned-transaction-info.json".parse()?))
     }
 }

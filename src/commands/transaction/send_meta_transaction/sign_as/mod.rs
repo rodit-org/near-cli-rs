@@ -1,6 +1,3 @@
-use color_eyre::owo_colors::OwoColorize;
-use inquire::Select;
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = super::SignedMetaTransactionContext)]
 #[interactive_clap(output_context = RelayerAccountIdContext)]
@@ -76,51 +73,13 @@ impl RelayerAccountId {
     fn input_relayer_account_id(
         context: &super::SignedMetaTransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        loop {
-            let relayer_account_id = if let Some(account_id) =
-                crate::common::input_signer_account_id_from_used_account_list(
-                    &context.global_context.config.credentials_home_dir,
-                    "What is the relayer account ID?",
-                )? {
-                account_id
-            } else {
-                return Ok(None);
-            };
-
-            if context.global_context.offline {
-                return Ok(Some(relayer_account_id));
-            }
-
-            if !crate::common::is_account_exist(
-                &context.global_context,
-                relayer_account_id.clone().into(),
-            )? {
-                tracing::warn!(
-                    "{}",
-                    format!(
-                        "The account <{relayer_account_id}> does not exist on [{}] networks.",
-                        context.global_context.config.network_names().join(", ")
-                    )
-                    .red()
-                );
-                #[derive(strum_macros::Display)]
-                enum ConfirmOptions {
-                    #[strum(to_string = "Yes, I want to enter a new account name.")]
-                    Yes,
-                    #[strum(to_string = "No, I want to use this account name.")]
-                    No,
-                }
-                let select_choose_input = Select::new(
-                    "Do you want to enter another relayer account id?",
-                    vec![ConfirmOptions::Yes, ConfirmOptions::No],
-                )
-                .prompt()?;
-                if let ConfirmOptions::No = select_choose_input {
-                    return Ok(Some(relayer_account_id));
-                }
-            } else {
-                return Ok(Some(relayer_account_id));
-            }
-        }
+        let known_accounts = crate::common::get_used_account_list(&context.global_context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <relayer-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }

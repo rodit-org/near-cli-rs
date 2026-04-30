@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use color_eyre::{eyre::WrapErr, owo_colors::OwoColorize};
-use inquire::{CustomType, Select};
+use color_eyre::eyre::WrapErr;
 
 use crate::common::{CallResultExt, JsonRpcClientExt};
 
@@ -115,42 +114,7 @@ impl Signer {
     fn input_signer_account_id(
         context: &super::profile_args_type::ArgsContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        loop {
-            let signer_account_id: crate::types::account_id::AccountId =
-                CustomType::new("What is the signer account ID?")
-                    .with_default(context.account_id.clone().into())
-                    .prompt()?;
-            if !crate::common::is_account_exist(
-                &context.global_context,
-                signer_account_id.clone().into(),
-            )? {
-                tracing::warn!(
-                    "{}",
-                    format!(
-                        "The account <{signer_account_id}> does not exist on [{}] networks.",
-                        context.global_context.config.network_names().join(", ")
-                    )
-                    .red()
-                );
-                #[derive(strum_macros::Display)]
-                enum ConfirmOptions {
-                    #[strum(to_string = "Yes, I want to enter a new account name.")]
-                    Yes,
-                    #[strum(to_string = "No, I want to use this account name.")]
-                    No,
-                }
-                let select_choose_input = Select::new(
-                    "Do you want to enter another signer account id?",
-                    vec![ConfirmOptions::Yes, ConfirmOptions::No],
-                )
-                .prompt()?;
-                if let ConfirmOptions::No = select_choose_input {
-                    return Ok(Some(signer_account_id));
-                }
-            } else {
-                return Ok(Some(signer_account_id));
-            }
-        }
+        Ok(Some(context.account_id.clone().into()))
     }
 }
 

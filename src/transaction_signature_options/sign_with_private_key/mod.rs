@@ -1,5 +1,4 @@
 use color_eyre::eyre::{ContextCompat, WrapErr};
-use inquire::CustomType;
 use near_primitives::transaction::Transaction;
 use near_primitives::transaction::TransactionV0;
 
@@ -183,8 +182,8 @@ impl SignPrivateKey {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<u64>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<u64>::new("Enter a nonce for the access key:").prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --nonce in offline mode."
             ));
         }
         Ok(None)
@@ -194,11 +193,8 @@ impl SignPrivateKey {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::crypto_hash::CryptoHash>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<crate::types::crypto_hash::CryptoHash>::new(
-                    "Enter recent block hash:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-hash in offline mode."
             ));
         }
         Ok(None)
@@ -208,11 +204,8 @@ impl SignPrivateKey {
         context: &crate::commands::TransactionContext,
     ) -> color_eyre::eyre::Result<Option<near_primitives::types::BlockHeight>> {
         if context.global_context.offline {
-            return Ok(Some(
-                CustomType::<near_primitives::types::BlockHeight>::new(
-                    "Enter recent block height:",
-                )
-                .prompt()?,
+            return Err(color_eyre::eyre::eyre!(
+                "Missing required argument --block-height in offline mode."
             ));
         }
         Ok(None)

@@ -48,19 +48,27 @@ impl PublicKeyFromMpc {
     fn input_controllable_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the controllable account address (where public key would've been published)?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <controllable-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 
     fn input_admin_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the admin account address?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <admin-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -188,13 +196,10 @@ impl MpcDerivationPath {
     fn input_derivation_path(
         context: &MpcKeyTypeContext,
     ) -> color_eyre::eyre::Result<Option<String>> {
-        let derivation_path = inquire::Text::new("What is the derivation path?")
-            .with_initial_value(&format!(
-                "{}-{}",
-                context.admin_account_id, context.controllable_account_id,
-            ))
-            .prompt()?;
-        Ok(Some(derivation_path))
+        Ok(Some(format!(
+            "{}-{}",
+            context.admin_account_id, context.controllable_account_id,
+        )))
     }
 }
 

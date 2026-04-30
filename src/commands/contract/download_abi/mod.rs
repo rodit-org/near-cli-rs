@@ -1,7 +1,6 @@
 use std::io::Write;
 
 use color_eyre::eyre::Context;
-use inquire::CustomType;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = crate::GlobalContext)]
@@ -37,10 +36,14 @@ impl Contract {
     pub fn input_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the contract account ID?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -91,12 +94,7 @@ impl DownloadContractAbi {
         context: &ContractContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::path_buf::PathBuf>> {
         Ok(Some(
-            CustomType::new("Enter the file path where the contract ABI should be saved to:")
-                .with_starting_input(&format!(
-                    "{}.abi.json",
-                    context.account_id.as_str().replace('.', "_")
-                ))
-                .prompt()?,
+            format!("{}.abi.json", context.account_id.as_str().replace('.', "_")).parse()?,
         ))
     }
 }

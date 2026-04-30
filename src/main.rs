@@ -5,23 +5,24 @@
 )]
 
 use clap::Parser;
+use clap::Subcommand;
 #[cfg(feature = "self-update")]
 use color_eyre::eyre::WrapErr;
 use color_eyre::owo_colors::OwoColorize;
 use interactive_clap::ToCliArgs;
 
-pub use near_cli_rs::GlobalContext;
-pub use near_cli_rs::Verbosity;
-pub use near_cli_rs::commands;
-pub use near_cli_rs::common::{self, CliResult};
-pub use near_cli_rs::config;
-pub use near_cli_rs::js_command_match;
-pub use near_cli_rs::network;
-pub use near_cli_rs::network_for_transaction;
-pub use near_cli_rs::network_view_at_block;
-pub use near_cli_rs::transaction_signature_options;
-pub use near_cli_rs::types;
-pub use near_cli_rs::utils_command;
+pub use near_cli_rs_ai::GlobalContext;
+pub use near_cli_rs_ai::Verbosity;
+pub use near_cli_rs_ai::commands;
+pub use near_cli_rs_ai::common::{self, CliResult};
+pub use near_cli_rs_ai::config;
+pub use near_cli_rs_ai::js_command_match;
+pub use near_cli_rs_ai::network;
+pub use near_cli_rs_ai::network_for_transaction;
+pub use near_cli_rs_ai::network_view_at_block;
+pub use near_cli_rs_ai::transaction_signature_options;
+pub use near_cli_rs_ai::types;
+pub use near_cli_rs_ai::utils_command;
 
 type ConfigContext = (crate::config::Config,);
 
@@ -72,8 +73,6 @@ impl From<CmdContext> for crate::GlobalContext {
 }
 
 fn main() -> crate::common::CliResult {
-    inquire::set_global_render_config(near_cli_rs::get_global_render_config());
-
     let config = crate::config::Config::get_config_toml()?;
 
     #[cfg(not(debug_assertions))]
@@ -139,7 +138,7 @@ fn main() -> crate::common::CliResult {
     } else {
         Verbosity::Interactive
     };
-    near_cli_rs::setup_tracing(verbosity)?;
+    near_cli_rs_ai::setup_tracing(verbosity)?;
 
     if !crate::common::is_used_account_list_exist(&config.credentials_home_dir) {
         let _ = crate::common::create_used_account_list_from_legacy_keychain(
@@ -201,14 +200,14 @@ fn main() -> crate::common::CliResult {
     ) && let Ok(Ok(latest_version)) = handle.join()
     {
         let current_version = semver::Version::parse(self_update::cargo_crate_version!())
-            .wrap_err("Failed to parse current version of `near` CLI")?;
+            .wrap_err("Failed to parse current version of `near-cli-rs-ai` CLI")?;
 
         let latest_version = semver::Version::parse(&latest_version)
-            .wrap_err("Failed to parse latest version of `near` CLI")?;
+            .wrap_err("Failed to parse latest version of `near-cli-rs-ai` CLI")?;
 
         if current_version < latest_version {
             eprintln!(
-                "\n`near` CLI has a new update available \x1b[2m{current_version}\x1b[0m →  \x1b[32m{latest_version}\x1b[0m"
+                "\n`near-cli-rs-ai` CLI has a new update available \x1b[2m{current_version}\x1b[0m →  \x1b[32m{latest_version}\x1b[0m"
             );
             let self_update_cli_cmd = CliCmd {
                 offline: false,
@@ -225,7 +224,7 @@ fn main() -> crate::common::CliResult {
                 )),
             };
             eprintln!(
-                "To update `near` CLI use: {}",
+                "To update `near-cli-rs-ai` CLI use: {}",
                 shell_words::join(
                     std::iter::once(near_cli_exec_path).chain(self_update_cli_cmd.to_cli_args())
                 )
@@ -249,7 +248,6 @@ fn try_rewrite_construct_transaction_args() -> Option<Vec<String>> {
     }
     let receiver_arg = &args[receiver_idx];
     // Check if receiver_arg matches any ReceiverMode subcommand name.
-    use clap::Subcommand;
     let receiver_cmd = clap::Command::new("tmp");
     let receiver_cmd =
         commands::transaction::construct_transaction::CliReceiverMode::augment_subcommands(

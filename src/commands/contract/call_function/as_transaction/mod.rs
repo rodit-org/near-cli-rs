@@ -1,4 +1,3 @@
-use inquire::CustomType;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = crate::GlobalContext)]
@@ -34,10 +33,14 @@ impl CallFunction {
     pub fn input_contract_account_id(
         context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_non_signer_account_id_from_used_account_list(
-            &context.config.credentials_home_dir,
-            "What is the contract account ID?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <contract-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }
 
@@ -139,23 +142,7 @@ impl PrepaidGas {
     fn input_gas(
         _context: &FunctionContext,
     ) -> color_eyre::eyre::Result<Option<crate::common::NearGas>> {
-        Ok(Some(
-            CustomType::new("Enter gas for function call:")
-                .with_starting_input("100 TeraGas")
-                .with_validator(move |gas: &crate::common::NearGas| {
-                    if gas > &near_gas::NearGas::from_tgas(1000) {
-                        Ok(inquire::validator::Validation::Invalid(
-                            inquire::validator::ErrorMessage::Custom(
-                                "You need to enter a value of no more than 1000 TeraGas"
-                                    .to_string(),
-                            ),
-                        ))
-                    } else {
-                        Ok(inquire::validator::Validation::Valid)
-                    }
-                })
-                .prompt()?,
-        ))
+        Ok(Some("100 Tgas".parse()?))
     }
 }
 
@@ -201,11 +188,7 @@ impl Deposit {
     fn input_deposit(
         _context: &PrepaidGasContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_token::NearToken>> {
-        Ok(Some(
-            CustomType::new("Enter deposit for a function call (example: 10 NEAR or 0.5 near or 10000 yoctonear):")
-                .with_starting_input("0 NEAR")
-                .prompt()?
-        ))
+        Ok(Some("0 NEAR".parse()?))
     }
 }
 
@@ -295,9 +278,13 @@ impl SignerAccountId {
     pub fn input_signer_account_id(
         context: &DepositContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        crate::common::input_signer_account_id_from_used_account_list(
-            &context.global_context.config.credentials_home_dir,
-            "What is the signer account ID?",
-        )
+        let known_accounts = crate::common::get_used_account_list(&context.global_context.config.credentials_home_dir)
+            .into_iter()
+            .map(|account| account.account_id.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Err(color_eyre::eyre::eyre!(
+            "Missing required argument <signer-account-id>. Provide it explicitly to run non-interactively. Known local accounts: {known_accounts}"
+        ))
     }
 }

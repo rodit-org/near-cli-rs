@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use inquire::{CustomType, Select, Text};
-
 #[derive(Debug, Clone)]
 pub struct AccessTypeContext {
     pub global_context: crate::GlobalContext,
@@ -108,46 +106,15 @@ impl FunctionCallType {
     pub fn input_function_names(
         _context: &super::AddKeyCommandContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::vec_string::VecString>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(
-                to_string = "Yes, I want to input a list of function names that can be called when transaction is signed by this access key"
-            )]
-            Yes,
-            #[strum(to_string = "No, I allow it to call any functions on the specified contract")]
-            No,
-        }
-
-        let select_choose_input = Select::new(
-            "Would you like the access key to be valid exclusively for calling specific functions on the contract?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let mut input_function_names = Text::new("Enter a comma-separated list of function names that will be allowed to be called in a transaction signed by this access key:")
-                    .prompt()?;
-            if input_function_names.contains('\"') {
-                input_function_names.clear()
-            };
-            if input_function_names.is_empty() {
-                Ok(Some(crate::types::vec_string::VecString(vec![])))
-            } else {
-                Ok(Some(crate::types::vec_string::VecString::from_str(
-                    &input_function_names,
-                )?))
-            }
-        } else {
-            Ok(Some(crate::types::vec_string::VecString(vec![])))
-        }
+        // In non-interactive mode, default to allowing any function when not provided.
+        Ok(Some(crate::types::vec_string::VecString(vec![])))
     }
 
     pub fn input_allowance(
         _context: &super::AddKeyCommandContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::near_allowance::NearAllowance>> {
-        let allowance_near_balance: crate::types::near_allowance::NearAllowance =
-            CustomType::new("Enter the allowance, a budget this access key can use to pay for transaction fees (example: 10 NEAR or 0.5 NEAR or 10000 yoctonear):")
-                .with_starting_input("unlimited")
-                .prompt()?;
-        Ok(Some(allowance_near_balance))
+        Ok(Some(crate::types::near_allowance::NearAllowance::from_str(
+            "unlimited",
+        )?))
     }
 }

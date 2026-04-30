@@ -1,5 +1,3 @@
-use inquire::{CustomType, Select};
-
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = crate::GlobalContext)]
 #[interactive_clap(output_context = AddNetworkConnectionContext)]
@@ -115,251 +113,70 @@ impl AddNetworkConnectionContext {
 }
 
 impl AddNetworkConnection {
+    fn missing_optional_flag<T>(
+        _flag: &str,
+    ) -> color_eyre::eyre::Result<Option<T>> {
+        Ok(None)
+    }
+
     fn input_rpc_api_key(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::api_key::ApiKey>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, the RPC endpoint requires an API key")]
-            Yes,
-            #[strum(to_string = "No, the RPC endpoint does not require an API key")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter an API key?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let api_key: crate::types::api_key::ApiKey =
-                CustomType::new("Enter an API key:").prompt()?;
-            Ok(Some(api_key))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--rpc-api-key")
     }
 
     fn input_linkdrop_account_id(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(
-                to_string = "Yes, and I want to enter the name of the account hosting the program \"linkdrop\""
-            )]
-            Yes,
-            #[strum(to_string = "I don't know")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Is there a \"linkdrop\" program on this network?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let account_id: crate::types::account_id::AccountId =
-            CustomType::new("What is the name of the account that hosts the linkdrop program? (e.g. on mainnet it is 'near', on testnet it is 'testnet')").prompt()?;
-            Ok(Some(account_id))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--linkdrop-account-id")
     }
 
     fn input_near_social_db_contract_account_id(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, and I want to enter the NEAR Social DB contract account ID")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the NEAR Social DB contract account ID")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the NEAR Social DB contract account ID on this network?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let account_id: crate::types::account_id::AccountId =
-            CustomType::new("What is the NEAR Social DB contract account ID? (e.g. on mainnet it is 'social.near')").prompt()?;
-            Ok(Some(account_id))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--near-social-db-contract-account-id")
     }
 
     fn input_faucet_url(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the URL of the faucet")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the faucet URL")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the faucet URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let faucet_url: crate::types::url::Url =
-                CustomType::new("What is the faucet URL?").prompt()?;
-            Ok(Some(faucet_url))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--faucet-url")
     }
 
     fn input_meta_transaction_relayer_url(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the URL of the relayer")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the relayer URL")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the meta transaction relayer URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let meta_transaction_relayer_url: crate::types::url::Url =
-                CustomType::new("What is the meta transaction relayer URL?").prompt()?;
-            Ok(Some(meta_transaction_relayer_url))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--meta-transaction-relayer-url")
     }
 
     fn input_fastnear_url(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the FastNEAR API URL")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the FastNEAR API URL")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the FastNEAR API URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let stake_delegators_api: crate::types::url::Url =
-                CustomType::new("What is the FastNEAR API URL?").prompt()?;
-            Ok(Some(stake_delegators_api))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--fastnear-url")
     }
 
     fn input_staking_pools_factory_account_id(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the staking pools factory account ID")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the staking pools factory account ID")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the staking pools factory account ID?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let account_id: crate::types::account_id::AccountId =
-                CustomType::new("What is the staking pools factory account ID?").prompt()?;
-            Ok(Some(account_id))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--staking-pools-factory-account-id")
     }
 
     fn input_coingecko_url(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::url::Url>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the CoinGecko API URL")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the CoinGecko API URL")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the CoinGecko API URL?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let coingecko_api: crate::types::url::Url =
-                CustomType::new("What is the CoinGecko API URL?")
-                    .with_starting_input("https://api.coingecko.com/")
-                    .prompt()?;
-            Ok(Some(coingecko_api))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--coingecko-url")
     }
 
     fn input_tx_wait_until(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::tx_execution_status::TxExecutionStatus>>
     {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(
-                to_string = "Yes, I want to set a custom transaction wait level (default: final)"
-            )]
-            Yes,
-            #[strum(to_string = "No, use the default (wait for finality)")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to configure the transaction wait level?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let tx_wait_until: crate::types::tx_execution_status::TxExecutionStatus =
-                CustomType::new("What transaction wait level? (none, included, executed-optimistic, included-final, executed, final)").prompt()?;
-            Ok(Some(tx_wait_until))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--tx-wait-until")
     }
 
     fn input_mpc_contract_account_id(
         _context: &crate::GlobalContext,
     ) -> color_eyre::eyre::Result<Option<crate::types::account_id::AccountId>> {
-        #[derive(strum_macros::Display)]
-        enum ConfirmOptions {
-            #[strum(to_string = "Yes, I want to enter the MPC contract account ID")]
-            Yes,
-            #[strum(to_string = "No, I don't want to enter the MPC contract account ID")]
-            No,
-        }
-        let select_choose_input = Select::new(
-            "Do you want to enter the MPC contract account ID?",
-            vec![ConfirmOptions::Yes, ConfirmOptions::No],
-        )
-        .prompt()?;
-        if let ConfirmOptions::Yes = select_choose_input {
-            let mpc_contract_account_id: crate::types::account_id::AccountId =
-                CustomType::new("What is the MPC (Multi-Party Computation) contract account ID?")
-                    .prompt()?;
-            Ok(Some(mpc_contract_account_id))
-        } else {
-            Ok(None)
-        }
+        Self::missing_optional_flag("--mpc-contract-account-id")
     }
 }

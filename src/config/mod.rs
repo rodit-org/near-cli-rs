@@ -189,7 +189,7 @@ impl Config {
                 if let Ok(config_v1) = toml::from_str::<migrations::ConfigV1>(&config_toml) {
                     Ok(migrations::ConfigVersion::V1(config_v1))
                 } else {
-                    eprintln!("Warning: `near` CLI configuration file stored at {path_config_toml:?} could not be parsed due to: {err}");
+                    eprintln!("Warning: `near-cli-rs-ai` CLI configuration file stored at {path_config_toml:?} could not be parsed due to: {err}");
                     eprintln!("Note: The default configuration printed below will be used instead:\n");
                     let default_config = crate::config::Config::default();
                     eprintln!("{}", toml::to_string(&default_config)?);
@@ -224,7 +224,7 @@ impl Config {
             .write(config_toml.as_bytes())
             .wrap_err_with(|| format!("Failed to write to file: {path_config_toml:?}"))?;
 
-        eprintln!("Note: `near` CLI configuration is stored in {path_config_toml:?}");
+        eprintln!("Note: `near-cli-rs-ai` CLI configuration is stored in {path_config_toml:?}");
 
         Ok(())
     }

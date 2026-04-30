@@ -48,7 +48,7 @@ impl From<SignerAccountIdContext> for crate::commands::ActionContext {
 
                 move |network_config| {
                     if new_account_id.as_str().chars().count()
-                        < super::MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH
+                        < crate::commands::account::MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH
                         && new_account_id.is_top_level()
                     {
                         return color_eyre::eyre::Result::Err(color_eyre::eyre::eyre!(
